@@ -1,0 +1,108 @@
+<mujoco model="spine">
+    <compiler angle="radian" meshdir="./meshes/"/>
+    <option timestep="1e-3"
+            iterations="10"
+            tolerance="1e-10"
+            impratio="10"
+            gravity="0 0 -9.81"
+            solver="CG"
+            cone="elliptic"/>
+    <asset>
+        <mesh name="hind_body" file="hind_spine.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="hind_spine" file="hind_mid_spine.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="front_spine" file="front_mid_spine.stl" scale="0.001 0.001 0.001"/>
+        <mesh name="front_body" file="front_spine.stl" scale="0.001 0.001 0.001"/>
+
+        <texture builtin="gradient" height="256" rgb1=".9 .9 1." rgb2=".2 .3 .4" type="skybox" width="256"/>
+        <texture builtin="checker" height="512" name="texplane" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2" type="2d"
+                 width="512"/>
+        <material name="floorplane" reflectance="0.2" texrepeat="5 5" texture="texplane" texuniform="true"/>
+    </asset>
+
+    <default>
+        <default class="spined_dog_defaults">
+            <joint axis="0 1 0" range="-10 10" actuatorfrcrange="-12 12" damping="0.0" frictionloss="0.0"/>
+        </default>
+    </default>
+
+    <worldbody>
+        <geom name="floor0" pos="0. 0. 0." size="3 3 .125" type="plane" condim="3" material="floorplane"/>
+        <light directional="true" ambient="0.2 0.2 0.2" diffuse="0.8 0.8 0.8" specular="0.3 0.3 0.3" castshadow="false"
+               pos="0 0 4" dir="0 0 -1" name="light0"/>
+
+        <!-- ROOT BODY with FREEJOINT for floating base -->
+        <body name="hind_body" pos="0 0 0.5" quat="1 0 0 0" childclass="spined_dog_defaults">
+            <inertial pos="0 0 0" mass="0.377" 
+                diaginertia="0.0001832 0.0003327 0.0002337"/>
+            <!-- FREEJOINT: Provides 6-DOF floating base (3 translation + 3 rotation) -->
+            <!-- <freejoint name="root_joint"/> -->
+            <geom pos="0 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="hind_body"/>
+            <!-- <geom pos="0 0 0" type="mesh" mesh="hind_body"/> -->
+            <!-- LINK 2 -->
+            <body name="hind_spine" pos="0.00454 -0.017638872 0">
+                <inertial pos="0.109455866 0.014797864 0" mass="0.399"
+                          diaginertia="0.0001953 0.0005357 0.0004759"/>
+                <!-- JOINT 1: First revolute joint -->
+                <joint name="joint_hind_spine" pos="0 0 0"/>
+                <geom pos="0 0 0" type="mesh" contype="0" conaffinity="1" group="1" density="0" mesh="hind_spine"
+                      condim="1"/>
+                <!-- <geom pos="0 0 0" type="mesh" mesh="hind_mid_spine"/> -->
+
+                <!-- LINK 3 -->
+                <body name="front_spine" pos="0.1175 0.036 0">
+                    <inertial pos="0.05875 0.0073 0" mass="0.052"
+                              diaginertia="0.0000036976 0.000084358 0.000082312887603"/>
+                    <!-- JOINT 2: Second revolute joint -->
+                    <joint name="joint_front_spine" pos="0 0 0"/>
+                    <geom pos="0 0 0" type="mesh" contype="0" conaffinity="1" group="1" density="0"
+                          mesh="front_spine" condim="1"/>
+                    <!-- <geom pos="0 0 0" type="mesh" mesh="front_spine"/> -->
+
+                    <!-- LINK 4 -->
+                    <body name="front_body" pos="0.1175 0 0">
+                        <inertial pos="0.00454141 -0.017638872 0" mass="0.377197524" 
+                            diaginertia="0.0001832 0.0003327 0.0002337"/>
+                        <!-- JOINT 3: Third revolute joint -->
+                        <joint name="joint_front_body" pos="0 0 0"/>
+                        <geom pos="0 0 0" type="mesh" contype="0" conaffinity="1" group="1" density="0"
+                              mesh="front_body" condim="1"/>
+                        <!-- <geom pos="0 0 0" type="mesh" mesh="front_body"/> -->
+                    </body>
+                </body>
+            </body>
+        </body>
+    </worldbody>
+
+    <actuator>
+        <!-- Only actuate the 3 spine joints, NOT the freejoint -->
+        <motor joint="joint_hind_spine" name="motor_hind_spine" gear="1" ctrllimited="true"
+               ctrlrange="-12.0 12.0"/>
+        <motor joint="joint_front_spine" name="motor_front_spine" gear="1" ctrllimited="true"
+               ctrlrange="-12.0 12.0"/>
+        <motor joint="joint_front_body" name="motor_front_body" gear="1" ctrllimited="true"
+               ctrlrange="-12.0 12.0"/>
+    </actuator>
+
+    <sensor>
+        <!-- Joint positions -->
+        <jointpos name="pos_joint_hind_spine" joint="joint_hind_spine"/>
+        <jointpos name="pos_joint_front_spine" joint="joint_front_spine"/>
+        <jointpos name="pos_joint_front_body" joint="joint_front_body"/>
+
+        <!-- Joint velocities -->
+        <jointvel name="vel_joint_hind_spine" joint="joint_hind_spine"/>
+        <jointvel name="vel_joint_front_spine" joint="joint_front_spine"/>
+        <jointvel name="vel_joint_front_body" joint="joint_front_body"/>
+
+        <!-- Joint torques -->
+        <jointactuatorfrc name="torque_joint_hind_spine" joint="joint_hind_spine" noise="0.0"/>
+        <jointactuatorfrc name="torque_joint_front_spine" joint="joint_front_spine" noise="0.0"/>
+        <jointactuatorfrc name="torque_joint_front_body" joint="joint_front_body" noise="0.0"/>
+
+        <!-- Optional: Sensors for floating base state -->
+        <framepos name="base_position" objtype="body" objname="hind_body"/>
+        <framequat name="base_orientation" objtype="body" objname="hind_body"/>
+        <framelinvel name="base_linear_velocity" objtype="body" objname="hind_body"/>
+        <frameangvel name="base_angular_velocity" objtype="body" objname="hind_body"/>
+    </sensor>
+</mujoco>

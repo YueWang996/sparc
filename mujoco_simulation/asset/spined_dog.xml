@@ -1,0 +1,224 @@
+<mujoco model="spined_dog">
+      <compiler angle="radian" meshdir="./meshes/" balanceinertia="true"/>
+      <option timestep="1e-3"
+                  iterations="1000"
+                  tolerance="1e-8"
+                  impratio="1"
+                  gravity="0 0 -9.81"
+                  solver="CG"
+                  cone="elliptic"
+                  noslip_iterations="2"/>
+      <asset>
+            <mesh name="front_body" file="./simplify_front_body.stl" scale="0.001 0.001 0.001"/>
+            <mesh name="front_left_leg_upper" file="./front_left_leg_upper.stl"
+                  scale="0.001 0.001 0.001"/>
+            <mesh name="front_left_leg_lower" file="./front_leg_lower.stl"
+                  scale="0.001 0.001 0.001"/>
+            <mesh name="front_right_leg_upper" file="./front_right_leg_upper.stl"
+                  scale="0.001 0.001 0.001"/>
+            <mesh name="front_right_leg_lower" file="./front_leg_lower.stl"
+                  scale="0.001 0.001 0.001"/>
+            <mesh name="front_spine" file="./front_mid_spine.stl" scale="0.001 0.001 0.001"/>
+            <mesh name="hind_spine" file="./hind_mid_spine.stl" scale="0.001 0.001 0.001"/>
+            <mesh name="hind_body" file="./simplify_hind_body.stl" scale="0.001 0.001 0.001"/>
+            <mesh name="hind_left_leg_upper" file="./hind_left_leg_upper.stl"
+                  scale="0.001 0.001 0.001"/>
+            <mesh name="hind_left_leg_lower" file="./hind_leg_lower.stl"
+                  scale="0.001 0.001 0.001"/>
+            <mesh name="hind_right_leg_upper" file="./hind_right_leg_upper.stl"
+                  scale="0.001 0.001 0.001"/>
+            <mesh name="hind_right_leg_lower" file="./hind_leg_lower.stl"
+                  scale="0.001 0.001 0.001"/>
+
+            <texture builtin="gradient" height="256" rgb1=".9 .9 1." rgb2=".2 .3 .4" type="skybox"
+                  width="256"/>
+            <texture builtin="checker" height="512" name="texplane" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2"
+                  type="2d"
+                  width="512"/>
+            <material name="floorplane" reflectance="0.2" texrepeat="5 5" texture="texplane"
+                        texuniform="true"/>
+      </asset>
+
+      <default>
+            <default class="spined_dog_defaults">
+                  <joint axis="0 1 0" range="-10 10" actuatorfrcrange="-12 12" damping="0" frictionloss="0"/>
+                  <motor ctrllimited="true" ctrlrange="-12 12" gear="1"/>
+            </default>
+            <default class="visual">
+                  <geom contype="0" conaffinity="0" group="1" density="0"/>
+            </default>
+            <default class="foot_collision">
+                  <geom type="sphere" size="0.03" contype="2" conaffinity="1" group="3"/>
+            </default>
+      </default>
+
+    <worldbody>
+    <geom name="floor0" pos="0. 0. 0." size="30 30 0.1" type="plane" contype="1" conaffinity="1" priority="1"
+          friction="1 0.005 0.0001" material="floorplane"/>
+	<!-- <body name="floor_body" pos="0 0 0">
+        <joint name="floor_hinge" type="hinge" pos="0 0 0" axis="0 1 0" 
+               armature="10000" damping="10000" limited="false"/>
+        <geom name="floor0" type="box" size="30 30 0.1" 
+              contype="1" conaffinity="1" priority="1"
+              friction="1 0.005 0.0001" material="floorplane"/>
+        <inertial pos="0 0 0" mass="0.000001" diaginertia="0.000001 0.000001 0.000001"/>
+    </body> -->
+    <light directional="true" ambient="0.2 0.2 0.2" diffuse="0.8 0.8 0.8" specular="0.3 0.3 0.3"
+           castshadow="false" pos="0 0 4" dir="0 0 -1" name="light0"/>
+
+    <!-- <body name="hind_body" pos="0 0 0.25" quat="0.9990482 0 0.0436194 0" childclass="spined_dog_defaults"> -->
+    <body name="hind_body" pos="0 0 0.24" childclass="spined_dog_defaults">
+      <freejoint name="root_joint"/>
+      <inertial pos="0 0 0" mass="2.044" diaginertia="0.01614 0.007591 0.02169"/>
+      <geom class="visual" type="mesh" mesh="hind_body"/>
+<!--      <geom type="mesh" mesh="simplify_sim_hind_body"/>-->
+      <body name="hind_left_leg_upper" pos="-0.032496964 0.137389577 -0.00028757">
+        <inertial pos="0.000884 0.011774 -0.058206" mass="0.252259" diaginertia="0.000873 0.000942 0.000192"/>
+        <joint name="joint_hind_left_leg_upper" pos="0 0 0"/>
+        <geom class="visual" type="mesh" mesh="hind_left_leg_upper"/>
+<!--        <geom type="mesh" mesh="simplify_sim_hind_left_leg_upper"/>-->
+        <body name="hind_left_leg_lower" pos="0 0.012 -0.151">
+          <inertial pos="0.000327 0 -0.061393" mass="0.051" diaginertia="0.000223 0.000225 0.000005078"/>
+          <joint name="joint_hind_left_leg_lower" pos="0 0 0"/>
+          <geom class="visual" type="mesh" mesh="hind_left_leg_lower"/>
+<!--          <geom type="mesh" mesh="simplify_sim_hind_left_leg_lower"/>-->
+          <body name="hind_left_foot" pos="0 0 -0.151">
+            <inertial pos="0 0 0" mass="0.01" diaginertia="1e-05 1e-05 1e-05"/>
+            <site name="hind_left_foot_site" pos="0 0 0" size="0.01"/>
+            <geom name="hind_left_foot_visual" class="visual" type="sphere" size="0.028"/>
+            <geom name="hind_left_foot_collision" class="foot_collision"/>
+          </body>
+        </body>
+      </body>
+      <body name="hind_right_leg_upper" pos="-0.032496964 -0.136610423 -0.00028757">
+        <inertial pos="0.000883 -0.011774 -0.058205" mass="0.252259" diaginertia="0.000873 0.000942 0.000192"/>
+        <joint name="joint_hind_right_leg_upper" pos="0 0 0"/>
+        <geom class="visual" type="mesh" mesh="hind_right_leg_upper"/>
+<!--        <geom type="mesh" mesh="simplify_sim_hind_right_leg_upper"/>-->
+        <body name="hind_right_leg_lower" pos="0 -0.012 -0.151">
+          <inertial pos="0.000327 0 -0.061393" mass="0.051" diaginertia="0.000223 0.000225 0.000005078"/>
+          <joint name="joint_hind_right_leg_lower" pos="0 0 0"/>
+          <geom class="visual" type="mesh" mesh="hind_right_leg_lower"/>
+<!--          <geom type="mesh" mesh="simplify_sim_hind_right_leg_lower"/>-->
+          <body name="hind_right_foot" pos="0 0 -0.151">
+            <inertial pos="0 0 0" mass="0.01" diaginertia="1e-05 1e-05 1e-05"/>
+            <site name="hind_right_foot_site" pos="0 0 0" size="0.01"/>
+            <geom name="hind_right_foot_visual" class="visual" type="sphere" size="0.028"/>
+            <geom name="hind_right_foot_collision" class="foot_collision"/>
+          </body>
+        </body>
+      </body>
+      <body name="hind_spine" pos="0.106797362 -0.019360423 0.000984733">
+        <inertial pos="0.109455866 0.014797864 0" mass="0.399" diaginertia="0.0001953 0.0005357 0.0004759"/>
+        <joint name="joint_hind_spine" pos="0 0 0"/>
+        <geom class="visual" type="mesh" mesh="hind_spine"/>
+<!--        <geom type="mesh" mesh="simplify_sim_hind_spine"/>-->
+        <body name="front_spine" pos="0.1175 0.036 0">
+          <inertial pos="0.05875 0.0073 0" mass="0.052" diaginertia="0.0000036976 0.000084358 0.000082312887603"/>
+          <joint name="joint_front_spine" pos="0 0 0"/>
+          <geom class="visual" type="mesh" mesh="front_spine"/>
+<!--          <geom type="mesh" mesh="simplify_sim_front_spine"/>-->
+          <body name="front_body" pos="0.1175 0 0">
+            <inertial pos="0.107249862 -0.019360422 -0.002160635" mass="2.044" diaginertia="0.01614 0.007591 0.02169"/>
+            <joint name="joint_front_body" pos="0 0 0"/>
+            <geom class="visual" type="mesh" mesh="front_body"/>
+<!--            <geom type="mesh" mesh="simplify_sim_front_body"/>-->
+            <body name="front_left_leg_upper" pos="0.139742934 0.11725 -0.00245609">
+              <inertial pos="-0.000883 0.011774 -0.058205" mass="0.252259" diaginertia="0.000873 0.000942 0.000192"/>
+              <joint name="joint_front_left_leg_upper" pos="0 0 0"/>
+              <geom class="visual" type="mesh" mesh="front_left_leg_upper"/>
+<!--              <geom type="mesh" mesh="simplify_sim_front_left_leg_upper"/>-->
+              <body name="front_left_leg_lower" pos="0 0.012 -0.151">
+                <inertial pos="-0.000327 0 -0.061393" mass="0.051" diaginertia="0.000223 0.000225 0.000005078"/>
+                <joint name="joint_front_left_leg_lower" pos="0 0 0"/>
+                <geom class="visual" type="mesh" mesh="front_left_leg_lower"/>
+<!--                <geom type="mesh" mesh="simplify_sim_front_left_leg_lower"/>-->
+                <body name="front_left_foot" pos="0 0 -0.151">
+                  <inertial pos="0 0 0" mass="0.01" diaginertia="1e-05 1e-05 1e-05"/>
+                  <site name="front_left_foot_site" pos="0 0 0" size="0.01"/>
+                  <geom name="front_left_foot_visual" class="visual" type="sphere" size="0.028"/>
+                  <geom name="front_left_foot_collision" class="foot_collision"/>
+                </body>
+              </body>
+            </body>
+            <body name="front_right_leg_upper" pos="0.139742934 -0.15675 -0.002456609">
+              <inertial pos="-0.000884 -0.011774 -0.058206" mass="0.252259" diaginertia="0.000873 0.000942 0.000192"/>
+              <joint name="joint_front_right_leg_upper" pos="0 0 0"/>
+              <geom class="visual" type="mesh" mesh="front_right_leg_upper"/>
+<!--              <geom type="mesh" mesh="simplify_sim_front_right_leg_upper"/>-->
+              <body name="front_right_leg_lower" pos="0 -0.012 -0.151">
+                <inertial pos="-0.000327 0 -0.061393" mass="0.051" diaginertia="0.000223 0.000225 0.000005078"/>
+                <joint name="joint_front_right_leg_lower" pos="0 0 0"/>
+                <geom class="visual" type="mesh" mesh="front_right_leg_lower"/>
+<!--                <geom type="mesh" mesh="simplify_sim_front_right_leg_lower"/>-->
+                <body name="front_right_foot" pos="0 0 -0.151">
+                  <inertial pos="0 0 0" mass="0.01" diaginertia="1e-05 1e-05 1e-05"/>
+                  <site name="front_right_foot_site" pos="0 0 0" size="0.01"/>
+                  <geom name="front_right_foot_visual" class="visual" type="sphere" size="0.028"/>
+                  <geom name="front_right_foot_collision" class="foot_collision"/>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor class="spined_dog_defaults" joint="joint_hind_left_leg_upper" name="motor_hind_left_leg_upper"/>
+    <motor class="spined_dog_defaults" joint="joint_hind_left_leg_lower" name="motor_hind_left_leg_lower"/>
+    <motor class="spined_dog_defaults" joint="joint_hind_right_leg_upper" name="motor_hind_right_leg_upper"/>
+    <motor class="spined_dog_defaults" joint="joint_hind_right_leg_lower" name="motor_hind_right_leg_lower"/>
+    <motor class="spined_dog_defaults" joint="joint_hind_spine" name="motor_hind_spine"/>
+    <motor class="spined_dog_defaults" joint="joint_front_spine" name="motor_front_spine"/>
+    <motor class="spined_dog_defaults" joint="joint_front_body" name="motor_front_body"/>
+    <motor class="spined_dog_defaults" joint="joint_front_left_leg_upper" name="motor_front_left_leg_upper"/>
+    <motor class="spined_dog_defaults" joint="joint_front_left_leg_lower" name="motor_front_left_leg_lower"/>
+    <motor class="spined_dog_defaults" joint="joint_front_right_leg_upper" name="motor_front_right_leg_upper"/>
+    <motor class="spined_dog_defaults" joint="joint_front_right_leg_lower" name="motor_front_right_leg_lower"/>
+  </actuator>
+
+  <sensor>
+    <jointpos joint="joint_front_left_leg_upper" name="pos_front_left_leg_upper"/>
+    <jointpos joint="joint_front_left_leg_lower" name="pos_front_left_leg_lower"/>
+    <jointpos joint="joint_front_right_leg_upper" name="pos_front_right_leg_upper"/>
+    <jointpos joint="joint_front_right_leg_lower" name="pos_front_right_leg_lower"/>
+    <jointpos joint="joint_front_body" name="pos_front_body"/>
+    <jointpos joint="joint_front_spine" name="pos_front_spine"/>
+    <jointpos joint="joint_hind_spine" name="pos_hind_spine"/>
+    <jointpos joint="joint_hind_left_leg_upper" name="pos_hind_left_leg_upper"/>
+    <jointpos joint="joint_hind_left_leg_lower" name="pos_hind_left_leg_lower"/>
+    <jointpos joint="joint_hind_right_leg_upper" name="pos_hind_right_leg_upper"/>
+    <jointpos joint="joint_hind_right_leg_lower" name="pos_hind_right_leg_lower"/>
+    <jointvel joint="joint_front_left_leg_upper" name="vel_front_left_leg_upper"/>
+    <jointvel joint="joint_front_left_leg_lower" name="vel_front_left_leg_lower"/>
+    <jointvel joint="joint_front_right_leg_upper" name="vel_front_right_leg_upper"/>
+    <jointvel joint="joint_front_right_leg_lower" name="vel_front_right_leg_lower"/>
+    <jointvel joint="joint_front_body" name="vel_front_body"/>
+    <jointvel joint="joint_front_spine" name="vel_front_spine"/>
+    <jointvel joint="joint_hind_spine" name="vel_hind_spine"/>
+    <jointvel joint="joint_hind_left_leg_upper" name="vel_hind_left_leg_upper"/>
+    <jointvel joint="joint_hind_left_leg_lower" name="vel_hind_left_leg_lower"/>
+    <jointvel joint="joint_hind_right_leg_upper" name="vel_hind_right_leg_upper"/>
+    <jointvel joint="joint_hind_right_leg_lower" name="vel_hind_right_leg_lower"/>
+    <jointactuatorfrc joint="joint_front_left_leg_upper" name="torque_front_left_leg_upper"/>
+    <jointactuatorfrc joint="joint_front_left_leg_lower" name="torque_front_left_leg_lower"/>
+    <jointactuatorfrc joint="joint_front_right_leg_upper" name="torque_front_right_leg_upper"/>
+    <jointactuatorfrc joint="joint_front_right_leg_lower" name="torque_front_right_leg_lower"/>
+    <jointactuatorfrc joint="joint_front_body" name="torque_front_body"/>
+    <jointactuatorfrc joint="joint_front_spine" name="torque_front_spine"/>
+    <jointactuatorfrc joint="joint_hind_spine" name="torque_hind_spine"/>
+    <jointactuatorfrc joint="joint_hind_left_leg_upper" name="torque_hind_left_leg_upper"/>
+    <jointactuatorfrc joint="joint_hind_left_leg_lower" name="torque_hind_left_leg_lower"/>
+    <jointactuatorfrc joint="joint_hind_right_leg_upper" name="torque_hind_right_leg_upper"/>
+    <jointactuatorfrc joint="joint_hind_right_leg_lower" name="torque_hind_right_leg_lower"/>
+    <framelinvel objtype="body" objname="hind_body" name="hind_body_framelinvel"/>
+    <frameangvel objtype="body" objname="hind_body" name="hind_body_frameangvel"/>
+    <framequat objtype="body" objname="hind_body" name="hind_body_framequat"/>
+    <touch name="hind_left_foot_touch" site="hind_left_foot_site"/>
+    <touch name="hind_right_foot_touch" site="hind_right_foot_site"/>
+    <touch name="front_left_foot_touch" site="front_left_foot_site"/>
+    <touch name="front_right_foot_touch" site="front_right_foot_site"/>
+  </sensor>
+</mujoco>
