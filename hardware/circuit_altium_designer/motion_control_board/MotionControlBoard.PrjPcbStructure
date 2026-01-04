@@ -1,0 +1,3 @@
+Record=TopLevelDocument|FileName=Core.SchDoc|SheetNumber=1
+Record=NoMainPathDocument|SourceDocument=Core.SchDoc|FileName=IMU.SchDoc|SheetNumber=2
+Record=NoMainPathDocument|SourceDocument=Core.SchDoc|FileName=Peripherals.SchDoc|SheetNumber=3
