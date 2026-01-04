@@ -264,8 +264,3 @@ For questions or collaboration opportunities:
 
 This work is supported by the School of Electronic and Computer Science (ECS), University of Southampton.
 
-We thank the open-source robotics community for tools and libraries that made this work possible, including MuJoCo, the PyTorch ecosystem, and the legged robotics research community for valuable discussions and feedback.
-
----
-
-**SPARC is an open-source platform for exploring spine compliance in legged locomotion.** Hardware designs and simulation code are provided for the robotics research community to build upon and extend.
