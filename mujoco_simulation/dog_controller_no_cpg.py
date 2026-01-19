@@ -180,8 +180,8 @@ class DogController:
 
         # --- Initialize Gait Generator ---
         self.gait_generator = GaitTrajectoryGenerator(
-            step_length=0.12,
-            step_height=0.06,
+            step_length=0.08,
+            step_height=0.08,
             frequency=gait_frequency_hz,
             thigh_length=0.151, 
             tibia_length=0.151,

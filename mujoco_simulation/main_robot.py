@@ -223,14 +223,14 @@ def main():
     controller.set_gait_frequency(INITIAL_FREQ)
     
     # --- Controller Parameters ---
-    target_kp = np.array([800.0, 2000.0, 15.0])
-    target_kd = np.array([8.0, 5.0, 0.5])
+    target_kp = np.array([900.0, 2000.0, 10.0])
+    target_kd = np.array([8.0, 5.0, 1.5])
     target_x_des = np.array([0.268, 0.0, 0.0])
     
-    initial_kp = np.array([800.0, 2000.0, 15.0])
-    initial_kd = np.array([15.0, 5.0, 1.5])
+    initial_kp = np.array([900.0, 2000.0, 10.0])
+    initial_kd = np.array([8.0, 5.0, 1.5])
 
-    controller.spine_controller.x_des = np.array([0.273, 0.0, 0.0])
+    controller.spine_controller.x_des = target_x_des
     controller.spine_controller.kp = initial_kp
     controller.spine_controller.kd = initial_kd
 
@@ -251,7 +251,7 @@ def main():
     calibration_done = False
     
     PHASE_GAIN = 1.0         # Hz per Radian of lag.
-    MIN_FREQ = 2.8           # Floor for safety
+    MIN_FREQ = 3.1           # Floor for safety
     MAX_FREQ = 3.2           # Ceiling
     
     # ** NEW ** Delayed Update State

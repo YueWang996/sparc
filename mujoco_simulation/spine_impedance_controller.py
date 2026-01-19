@@ -124,7 +124,7 @@ class SpineImpedanceController:
         v_spine = v_full[:, 6:]
 
         # -------------------------------------------------
-        # 2. Relative Kinematics (Explicit)
+        # 2. Relative Kinematics
         # -------------------------------------------------
         # Calculate Transform of Front AND Hind relative to the chain root
         T_front = self.fk_body.calc(q_spine, frame_id=self.front_id) # (B, 4, 4)
@@ -233,5 +233,45 @@ class SpineImpedanceController:
         tau_total = h_spine + tau_task
         tau_total = torch.clamp(tau_total, -100.0, 100.0)
 
+        # =========================================================================
+        # [DEBUG] Experimental Verification: Print inertial coupling ratio and force proportions
+        # =========================================================================
+        # Use data from the first environment for analysis
+        L_check = Lambda[0]       # (3, 3)
+        F_imp_check = F_imp[0]    # (3)
+        F_comp_check = F_comp[0]  # (3)
+
+        # 1. Calculate diagonal dominance of the inertia matrix
+        # Extract diagonal elements (Mass in X, Z, Theta)
+        L_diag = torch.diagonal(L_check)
+        # Extract off-diagonal elements (Coupling terms)
+        L_off_diag = L_check - torch.diag(L_diag)
+        
+        avg_mass = torch.mean(torch.abs(L_diag)).item()
+        avg_coupling = torch.mean(torch.abs(L_off_diag)).item()
+        
+        # Calculate coupling ratio
+        # If this value is small (e.g., < 10-20%), it validates the "Minor inertial coupling" hypothesis
+        coupling_ratio = (avg_coupling / (avg_mass + 1e-6)) * 100.0
+
+        # 2. Calculate force dominance
+        # Compare impedance force (Kx+Dv) with inertial compensation force (Lambda*Jdot*v)
+        # If F_imp >> F_comp, it proves "Compliant behavior enforced by K/D is dominant"
+        norm_imp = torch.norm(F_imp_check).item()
+        norm_comp = torch.norm(F_comp_check).item()
+        
+        print(f"\n--- [Verify Dynamics Claim] ---")
+        print(f"Lambda (Task Inertia):\n{L_check.detach().cpu().numpy()}")
+        print(f"Metrics:")
+        print(f"  > Avg Diagonal Mass: {avg_mass:.4f}")
+        print(f"  > Avg Coupling Mass: {avg_coupling:.4f}")
+        print(f"  > Coupling Ratio:    {coupling_ratio:.2f}%  <-- Lower is better, proves coupling is negligible")
+        print(f"Forces:")
+        print(f"  > Impedance Force (Stiffness/Damping): {norm_imp:.4f} N")
+        print(f"  > Inertial Bias Force (Dynamics):      {norm_comp:.4f} N")
+        if norm_comp > 0:
+            print(f"  > Force Ratio (Imp/Inertia):           {norm_imp/norm_comp:.1f}x <-- Higher is better, proves impedance is dominant")
+        print(f"-------------------------------\n")
+        # =========================================================================
+
         return tau_total.squeeze(0).detach().cpu().numpy()
-    
