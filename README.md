@@ -39,8 +39,8 @@ sparc/
 │   ├── asset/                    # URDF/XML models and STL meshes
 │   ├── spine_impedance_controller.py  # Task-space impedance controller implementation
 │   ├── main_spine.py             # Basic spine simulation
-│   ├── main_robot.py             # Quadruped bounding gait simulation
-│   ├── dog_controller_no_cpg.py  # Quadruped leg controller
+│   ├── main_robot_raibert.py     # Quadruped bounding gait simulation
+│   ├── dog_controller_raibert.py # Quadruped leg controller
 │   └── mujoco_interface.py       # MuJoCo simulation interface
 ├── images/                       # Project images and diagrams
 ├── LICENSE                       # MIT License
@@ -158,15 +158,8 @@ This launches an interactive MuJoCo viewer where you can manually apply forces t
 **Run the quadruped bounding gait simulation:**
 ```bash
 cd mujoco_simulation
-python main_robot.py
+python main_robot_raibert.py
 ```
-
-This simulates a complete quadruped performing bounding locomotion. Adjust the following parameters in `main_robot.py`:
-- Spine stiffness/damping: `kx`, `kz`, `kθ`, `dx`, `dz`, `dθ`
-- Gait parameters: `frequency`, `stride_length`, `step_height`
-- Terrain: `slope_angle`
-
-The simulation logs kinematic data to CSV files for offline analysis and visualization.
 
 ## Building Your Own SPARC
 
