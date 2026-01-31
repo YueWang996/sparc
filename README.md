@@ -17,7 +17,7 @@ An open-source 3-DoF sagittal-plane spine module that combines revolute (pitch) 
   <em>SPARC spine structure with 3-DoF sagittal plane motion</em>
 </p>
 
-SPARC is a compact, self-contained spine module (1.26 kg) designed to mount between the fore and hind body segments of quadruped robots. The system integrates three torque-controlled actuators (Xiaomi Cybergear), a 1 kHz motion control board (STM32F405), and protected power electronics in a single package. A floating-base impedance controller with dynamics compensation renders tunable spring-damper behavior along horizontal, vertical, and rotational axes, enabling closed-loop control of both revolute and prismatic degrees of freedom with axis-selective compliance.
+SPARC is a compact, self-contained spine module (1.26 kg) designed to mount between the fore and hind body segments of quadruped robots. The system integrates three torque-controlled actuators (Xiaomi Cybergear), a 1 kHz motion control board, and protected power electronics in a single package. A floating-base impedance controller with dynamics compensation renders tunable spring-damper behavior along horizontal, vertical, and rotational axes, enabling closed-loop control of both revolute and prismatic degrees of freedom with axis-selective compliance.
 
 ## Features
 
@@ -64,7 +64,7 @@ The `hardware/` directory contains complete mechanical and electrical designs re
 
 - **Actuators**: 3× Xiaomi Cybergear quasi-direct-drive motors (12 N·m peak torque, CAN bus interface)
 - **Motion Control Board (MCB)**:
-  - STM32F405RGT6 microcontroller (@168 MHz)
+  - STM32F405RGT6 microcontroller (@168 MHz) (Note: this will be upgraded to STM32G473 shortly)
   - CAN transceiver for multi-actuator communication
   - Onboard 6-axis IMU for attitude estimation
   - USB interface for parameter tuning and debugging
@@ -170,7 +170,7 @@ To replicate the hardware:
 3. **Component Sourcing**:
    - 3× Xiaomi Cybergear motors (available from Xiaomi robotics distributors)
    - 2× Load cells (e.g., TAL220 10kg or similar)
-   - STM32F405RGT6 microcontroller and supporting components (see BOM in circuit files)
+   - STM32F405RGT6 microcontroller and supporting components (see BOM in circuit files. Note, the newer version is using STM32G473 for better performance)
    - 6S LiPo battery or 24V power supply
 4. **Assembly**: Follow the CAD assembly structure for mechanical integration
 5. **Control Software**: Develop your own control code using the simulation algorithms as reference. The [spine_impedance_controller.py](mujoco_simulation/spine_impedance_controller.py) provides the core impedance control implementation
@@ -192,7 +192,7 @@ The SPARC spine has been tested in both hardware benchtop experiments and MuJoCo
 
 These results suggest that adaptive spine compliance can reduce energy costs in quadruped locomotion across varying terrains and gaits.
 
-## Citation
+<!-- ## Citation
 
 If you use this work in your research, please cite:
 
@@ -203,7 +203,7 @@ If you use this work in your research, please cite:
   journal={arXiv preprint arXiv:2510.01984},
   year={2026}
 }
-```
+``` -->
 
 ## Applications and Integration
 
@@ -247,11 +247,11 @@ Please open an issue to discuss major changes before submitting pull requests.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Contact
+<!-- ## Contact
 
 For questions or collaboration opportunities:
 - Open an issue in this repository
-- GitHub: [@YueWang996](https://github.com/YueWang996)
+- GitHub: [@YueWang996](https://github.com/YueWang996) -->
 
 ## Acknowledgments
 
