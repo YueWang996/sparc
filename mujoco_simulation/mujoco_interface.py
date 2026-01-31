@@ -134,3 +134,40 @@ class MuJoCoInterface:
         angular_vel = self.data.cvel[body_id, 0:3].copy()
         
         return linear_vel, angular_vel
+    
+    def get_foot_contact_forces(self, foot_body_names: list[str]) -> np.ndarray:
+        """
+        Get contact forces for each foot.
+        
+        Args:
+            foot_body_names: List of foot body names [HL, HR, FL, FR]
+        
+        Returns:
+            Array of contact force magnitudes for each foot
+        """
+        forces = np.zeros(len(foot_body_names))
+        
+        # Get body IDs
+        foot_ids = []
+        for name in foot_body_names:
+            body_id = mj.mj_name2id(self.model, mj.mjtObj.mjOBJ_BODY, name)
+            foot_ids.append(body_id)
+        
+        # Iterate through all contacts
+        for i in range(self.data.ncon):
+            contact = self.data.contact[i]
+            
+            # Check if either body in contact is a foot
+            geom1_body = self.model.geom_bodyid[contact.geom1]
+            geom2_body = self.model.geom_bodyid[contact.geom2]
+            
+            for foot_idx, foot_id in enumerate(foot_ids):
+                if geom1_body == foot_id or geom2_body == foot_id:
+                    # Get contact force
+                    c_force = np.zeros(6)
+                    mj.mj_contactForce(self.model, self.data, i, c_force)
+                    # Normal force magnitude (first 3 components are force)
+                    force_mag = np.linalg.norm(c_force[:3])
+                    forces[foot_idx] = max(forces[foot_idx], force_mag)
+        
+        return forces

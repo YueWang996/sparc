@@ -165,6 +165,12 @@
     </body>
   </worldbody>
 
+  <equality>
+    <joint joint1="joint_hind_spine" polycoef="-0.85 0 0 0 0"/>
+    <joint joint1="joint_front_spine" polycoef="1.5 0 0 0 0"/>
+    <joint joint1="joint_front_body" polycoef="-0.85 0 0 0 0"/>
+  </equality>
+
   <actuator>
     <motor class="spined_dog_defaults" joint="joint_hind_left_leg_upper" name="motor_hind_left_leg_upper"/>
     <motor class="spined_dog_defaults" joint="joint_hind_left_leg_lower" name="motor_hind_left_leg_lower"/>

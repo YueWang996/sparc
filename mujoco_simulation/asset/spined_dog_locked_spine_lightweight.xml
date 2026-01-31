@@ -69,7 +69,7 @@
     <!-- <body name="hind_body" pos="0 0 0.25" quat="0.9990482 0 0.0436194 0" childclass="spined_dog_defaults"> -->
     <body name="hind_body" pos="0 0 0.25" childclass="spined_dog_defaults">
       <freejoint name="root_joint"/>
-      <inertial pos="0 0 0" mass="2.044" diaginertia="0.01614 0.007591 0.02169"/>
+      <inertial pos="0 0 0" mass="1.727" diaginertia="0.01614 0.007591 0.02169"/>
       <geom class="visual" type="mesh" mesh="hind_body"/>
 <!--      <geom type="mesh" mesh="simplify_sim_hind_body"/>-->
       <body name="hind_left_leg_upper" pos="-0.032496964 0.137389577 -0.00028757">
@@ -109,7 +109,7 @@
         </body>
       </body>
       <body name="hind_spine" pos="0.106797362 -0.019360423 0.000984733">
-        <inertial pos="0.109455866 0.014797864 0" mass="0.399" diaginertia="0.0001953 0.0005357 0.0004759"/>
+        <inertial pos="0.109455866 0.014797864 0" mass="0.082" diaginertia="0.0001953 0.0005357 0.0004759"/>
         <joint name="joint_hind_spine" pos="0 0 0"/>
         <geom class="visual" type="mesh" mesh="hind_spine"/>
 <!--        <geom type="mesh" mesh="simplify_sim_hind_spine"/>-->
@@ -119,7 +119,7 @@
           <geom class="visual" type="mesh" mesh="front_spine"/>
 <!--          <geom type="mesh" mesh="simplify_sim_front_spine"/>-->
           <body name="front_body" pos="0.1175 0 0">
-            <inertial pos="0.107249862 -0.019360422 -0.002160635" mass="2.044" diaginertia="0.01614 0.007591 0.02169"/>
+            <inertial pos="0.107249862 -0.019360422 -0.002160635" mass="1.727" diaginertia="0.01614 0.007591 0.02169"/>
             <joint name="joint_front_body" pos="0 0 0"/>
             <geom class="visual" type="mesh" mesh="front_body"/>
 <!--            <geom type="mesh" mesh="simplify_sim_front_body"/>-->
@@ -164,6 +164,12 @@
       </body>
     </body>
   </worldbody>
+
+  <equality>
+    <joint joint1="joint_hind_spine" polycoef="-0.85 0 0 0 0"/>
+    <joint joint1="joint_front_spine" polycoef="1.5 0 0 0 0"/>
+    <joint joint1="joint_front_body" polycoef="-0.85 0 0 0 0"/>
+  </equality>
 
   <actuator>
     <motor class="spined_dog_defaults" joint="joint_hind_left_leg_upper" name="motor_hind_left_leg_upper"/>

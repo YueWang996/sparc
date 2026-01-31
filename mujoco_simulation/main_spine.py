@@ -1,3 +1,4 @@
+from pathlib import Path
 import mujoco as mj
 import numpy as np
 from spine_impedance_controller import SpineImpedanceController
@@ -136,8 +137,9 @@ class MuJoCoSimulation:
 def main():
     """Main entry point."""
     # Paths
-    model_path = "/Users/justin/PycharmProjects/spine-sim/asset/spine.xml"
-    urdf_path = "/Users/justin/PycharmProjects/spine-sim/asset/spine.urdf"
+    current_script_path = Path(__file__).resolve()
+    model_path = str(current_script_path.parent / "asset" / "spine.xml")
+    urdf_path = str(current_script_path.parent / "asset" / "spine.urdf")
     
     # Create simulation
     sim = MuJoCoSimulation(model_path)
@@ -149,16 +151,16 @@ def main():
     # we are using to get the floating base state in the control loop below.
     controller = SpineImpedanceController(
         urdf_path=urdf_path,
-        end_effector_name="front_body",
+        end_effector_name="spine_end_effector",
         base_link_name="hind_body"
     )
 
     # Set Desired Task Space Position (Relative to Base)
     # Format: [x, z, pitch]
-    controller.x_des = np.array([0.176, 0.0, 0.0])
+    controller.x_des = np.array([0.165, 0.0, 0.0])
     
-    controller.kp = np.array([300.0, 8000.0, 5.0])
-    controller.kd = np.array([0.0, 5.0, 0.1])
+    controller.kp = np.array([3000.0, 8000.0, 15.0])
+    controller.kd = np.array([0.0, 1.0, 0.3])
 
     # Initialize Logger
     logger = DataLogger()
