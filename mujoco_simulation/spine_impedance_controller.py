@@ -1,10 +1,7 @@
 import numpy as np
 import torch
+import bard
 import bard.transforms
-from bard.parsers.urdf import build_chain_from_urdf
-from bard.core.dynamics import RNEA, CRBA
-from bard.core.jacobian import Jacobian
-from bard.core.kinematics import ForwardKinematics, SpatialAcceleration
 
 class SpineImpedanceController:
     """
@@ -21,23 +18,20 @@ class SpineImpedanceController:
         self.device = device
         self.num_envs = num_envs
 
-        # 1. Build Chains
-        chain_floating = build_chain_from_urdf(urdf_path, floating_base=True) 
-        self.chain_floating = chain_floating.to(device=self.device, dtype=torch.float32)
+        # 1. Build Models
+        self.model_floating = bard.build_model_from_urdf(
+            urdf_path, floating_base=True, dtype=torch.float32, device=self.device
+        )
+        self.model_body = bard.build_model_from_urdf(
+            urdf_path, floating_base=False, dtype=torch.float32, device=self.device
+        )
 
-        chain_body = build_chain_from_urdf(urdf_path, floating_base=False)
-        self.chain_body = chain_body.to(device=self.device, dtype=torch.float32)
+        # 2. Create Data workspaces
+        self.data_floating = bard.create_data(self.model_floating, max_batch_size=self.num_envs)
+        self.data_body = bard.create_data(self.model_body, max_batch_size=self.num_envs)
 
-        # 2. Initialize Bard Modules
-        self.dyn_rnea = RNEA(chain_floating, max_batch_size=self.num_envs)
-        self.dyn_crba = CRBA(chain_floating, max_batch_size=self.num_envs)
-        
-        self.jac_body = Jacobian(chain_body, max_batch_size=self.num_envs)
-        self.fk_body = ForwardKinematics(chain_body, max_batch_size=self.num_envs)
-        self.spatial_acc_body = SpatialAcceleration(chain_body, max_batch_size=self.num_envs)
-        
-        self.front_id = self.chain_body.get_frame_id(end_effector_name)
-        self.hind_id = self.chain_body.get_frame_id(base_link_name)
+        self.front_id = self.model_body.get_frame_id(end_effector_name)
+        self.hind_id = self.model_body.get_frame_id(base_link_name)
 
         # 3. Gains & Targets
         self.Kp = torch.diag(torch.tensor([5000.0, 3000.0, 30.0], device=self.device))
@@ -53,16 +47,16 @@ class SpineImpedanceController:
         self.S[2, 4] = 1.0  # pitch 
 
         # ============ Geometric Constraints (NEW) ============
-        # 约束格式: [x_min, x_max, z_min, z_max, pitch_min, pitch_max]
-        # 设为 None 表示该方向无约束
+        # Constraint format: [x_min, x_max, z_min, z_max, pitch_min, pitch_max]
+        # Set to None for no constraint in that direction
         self.constraints_enabled = False
         
-        # 默认约束范围（可通过setter修改）
+        # Default constraint ranges (modifiable via setter)
         self.x_limits = (0.18, 0.35)
         self.z_limits = (-0.2, 0.2)
         self.pitch_limits = (-0.8, 0.8)
         
-        # Barrier 参数 - 每个轴单独设置 [x, z, pitch]
+        # Barrier parameters - set independently for each axis [x, z, pitch]
         self.barrier_stiffness = torch.tensor([1000.0, 2000.0, 15.0], device=self.device)
         self.barrier_buffer = torch.tensor([0.01, 0.01, 0.01], device=self.device)
         self.barrier_damping = torch.tensor([10.0, 5.0, 0.1], device=self.device)
@@ -220,8 +214,10 @@ class SpineImpedanceController:
         # -------------------------------------------------
         # 2. Relative Kinematics
         # -------------------------------------------------
-        T_front = self.fk_body.calc(q_spine, frame_id=self.front_id)
-        T_hind = self.fk_body.calc(q_spine, frame_id=self.hind_id)
+        bard.update_kinematics(self.model_body, self.data_body, q_spine, v_spine)
+
+        T_front = bard.forward_kinematics(self.model_body, self.data_body, self.front_id)
+        T_hind = bard.forward_kinematics(self.model_body, self.data_body, self.hind_id)
 
         T_hind_inv = torch.linalg.inv(T_hind)
         T_rel = T_hind_inv @ T_front
@@ -236,8 +232,8 @@ class SpineImpedanceController:
         # -------------------------------------------------
         # 3. Jacobian
         # -------------------------------------------------
-        J_spatial_local = self.jac_body.calc(
-            q_spine, frame_id=self.front_id, reference_frame="local"
+        J_spatial_local = bard.jacobian(
+            self.model_body, self.data_body, self.front_id, reference_frame="local"
         )
 
         J_lin_local = J_spatial_local[:, :3, :]
@@ -254,12 +250,12 @@ class SpineImpedanceController:
         # -------------------------------------------------
         # 4. Dynamics
         # -------------------------------------------------
-        g_vec = torch.tensor([0.0, 0.0, -9.81], device=self.device).expand(q_full.shape[0], 3)
-        
-        h_full = self.dyn_rnea.calc(q_full, v_full, torch.zeros_like(v_full), gravity=g_vec)
-        h_spine = h_full[:, 6:] 
+        bard.update_kinematics(self.model_floating, self.data_floating, q_full, v_full)
 
-        M_full = self.dyn_crba.calc(q_full)
+        h_full = bard.rnea(self.model_floating, self.data_floating, torch.zeros_like(v_full))
+        h_spine = h_full[:, 6:]
+
+        M_full = bard.crba(self.model_floating, self.data_floating)
         M_spine = M_full[:, 6:9, 6:9]
 
         # -------------------------------------------------
@@ -276,10 +272,10 @@ class SpineImpedanceController:
         # -------------------------------------------------
         # 6. Drift Compensation
         # -------------------------------------------------
-        acc_local = self.spatial_acc_body.calc(
-            q_spine, v_spine, torch.zeros_like(v_spine), 
+        acc_local = bard.spatial_acceleration(
+            self.model_body, self.data_body, torch.zeros_like(v_spine),
             frame_id=self.front_id, reference_frame="local"
-        ) 
+        )
         if acc_local.dim() == 1: acc_local = acc_local.unsqueeze(0)
 
         acc_lin_local = acc_local[:, :3]

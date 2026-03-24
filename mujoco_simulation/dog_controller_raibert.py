@@ -30,7 +30,7 @@ class GaitTrajectoryGenerator:
         self.angular_freq = 2 * np.pi * frequency
         self.set_gait_type(gait_type)
         
-        # Raibert 参数
+        # Raibert parameters
         self.raibert_gain_hind = 0.08
         self.raibert_gain_front = 0.12
         self.feedforward_gain = 0.5
@@ -90,7 +90,7 @@ class GaitTrajectoryGenerator:
         if in_swing_now and not state.in_swing:
             state.x_liftoff = -state.x_touchdown
             
-            # 使用选定躯干的速度 (v_use) 计算落点
+            # Calculate touchdown point using selected torso velocity
             touchdown_x = self._compute_raibert_touchdown(v_use, v_cmd, raibert_gain, T_stance)
             
             if is_front:
@@ -188,7 +188,7 @@ class DogControllerRaibert:
         self.v_cmd_x = 0.0
         self.last_time = 0.0
         
-        # --- 1. Base feedforward forces ---
+        # Base feedforward forces
         self.hind_Fz = -25.0 
         self.hind_Fx = 10.0   
         self.front_Fz = -25.0 
@@ -198,7 +198,7 @@ class DogControllerRaibert:
         self.kp_pitch = 50.0
         self.kd_pitch = 5.0
         
-        # --- 2. Velocity tracking controller (hind legs) ---
+        # Velocity tracking controller (hind legs)
         self.kp_vel_x = 40.0
         self.ki_vel_x = 0.1
         self.vel_x_integral = 0.0
@@ -206,7 +206,7 @@ class DogControllerRaibert:
         self.v_cmd_filtered = 0.3  # Smoothed target velocity
         self.max_accel = 1.0       # Max acceleration 1.0 m/s^2 (tunable: smaller = more stable but slower)
         
-        # --- 3. Height maintenance controller (all legs) ---
+        # Height maintenance controller (all legs)
         self.desired_height = 0.23
         self.filtered_height = 0.25
         self.hind_kp_z = 80.0   
@@ -214,7 +214,7 @@ class DogControllerRaibert:
         self.front_kp_z = 80.0  
         self.front_kd_z = 10.0
         
-        # --- 4. Attitude PI controller ---
+        # Attitude PI controller
         self.target_roll = 0.0
         self.kp_roll = 30.0
         self.ki_roll = 0.1
@@ -225,7 +225,7 @@ class DogControllerRaibert:
         self.ki_yaw = 0.05
         self.yaw_integral = 0.0
         
-        # --- State estimation: separate velocity estimates for front and hind legs ---
+        # State estimation: separate velocity estimates for front and hind legs
         # Hind legs
         self.hind_v_accumulator = 0.0
         self.hind_v_sample_count = 0
@@ -278,12 +278,10 @@ class DogControllerRaibert:
         alpha_h = 0.2
         self.filtered_height = (1 - alpha_h) * self.filtered_height + alpha_h * current_z_raw
         
-        # ==========================================================
         # Velocity estimation: separate front and hind legs
-        # ==========================================================
         current_phase = self.gait_generator.get_current_phase(time)
         
-        # 1. Hind leg velocity estimation (phase offset typically 0 or pi)
+        # Hind leg velocity estimation (phase offset typically 0 or pi)
         # Use left hind leg (Leg 0) phase as reference
         hind_phase = (current_phase + self.gait_generator.phase_offsets[0]) % (2 * np.pi)
         hind_in_stance = np.sin(hind_phase) <= 0
@@ -299,7 +297,7 @@ class DogControllerRaibert:
             self.hind_v_sample_count = 0
         self.last_hind_in_stance = hind_in_stance
         
-        # 2. Front leg velocity estimation (different phase offset)
+        # Front leg velocity estimation (different phase offset)
         # Use left front leg (Leg 2) phase as reference
         front_phase = (current_phase + self.gait_generator.phase_offsets[2]) % (2 * np.pi)
         front_in_stance = np.sin(front_phase) <= 0
@@ -329,9 +327,7 @@ class DogControllerRaibert:
         self.filtered_pitch_rate = (1 - alpha_v) * self.filtered_pitch_rate + alpha_v * pitch_rate
         self.last_pitch = pitch_curr
         
-        # ==========================================================
         # Controller computation (Global Adjustments)
-        # ==========================================================
 
         # Target velocity smoothing (Acceleration Limiter)
         # Limit velocity command changes per step to simulate realistic physical acceleration
@@ -341,13 +337,13 @@ class DogControllerRaibert:
         change = np.clip(diff, -limit, limit)
         self.v_cmd_filtered += change
         
-        # 1. Velocity P control (Velocity Tracking) - only for hind legs, so use hind leg velocity for error
+        # Velocity P control (Velocity Tracking) - only for hind legs, so use hind leg velocity for error
         vel_error = self.v_cmd_filtered - v_hind_final
         self.vel_x_integral += vel_error * dt
         self.vel_x_integral = np.clip(self.vel_x_integral, -20.0, 20.0)
         Fx_vel_adjustment = self.kp_vel_x * vel_error + self.ki_vel_x * self.vel_x_integral
         
-        # 2. Height PD control
+        # Height PD control
         z_error = self.desired_height - self.filtered_height
         Fz_hind_height_adjustment = -(self.hind_kp_z * z_error - self.hind_kd_z * current_vz)
         Fz_front_height_adjustment = -(self.front_kp_z * z_error - self.front_kd_z * current_vz)
@@ -356,7 +352,7 @@ class DogControllerRaibert:
         pitch_rate = self.filtered_pitch_rate
         Fz_pitch_adjustment = self.kp_pitch * pitch_error - self.kd_pitch * pitch_rate
         
-        # 3. Attitude PI control
+        # Attitude PI control
         roll_error = self.target_roll - roll_curr
         self.roll_integral += roll_error * dt
         self.roll_integral = np.clip(self.roll_integral, -0.5, 0.5)
@@ -369,9 +365,7 @@ class DogControllerRaibert:
         self.yaw_integral = np.clip(self.yaw_integral, -0.5, 0.5)
         Fx_yaw_adjustment = self.kp_yaw * yaw_error + self.ki_yaw * self.yaw_integral
         
-        # ==========================================================
         # Leg loop
-        # ==========================================================
         leg_torques = np.zeros(8)
         
         for i in range(4):
@@ -403,12 +397,12 @@ class DogControllerRaibert:
                 curr_Fz = self.front_Fz if is_front else self.hind_Fz
                 
                 if is_front:
-                    # 前腿：速度过快时增加制动力（负 Fx）
-                    front_vel_gain = 20.0  # 可调
-                    curr_Fx -= front_vel_gain * vel_error  # 注意符号：vel_error > 0 时需要加速，前腿减小制动
+                    # Front legs: apply braking force when velocity is too high
+                    front_vel_gain = 20.0  # tunable
+                    curr_Fx -= front_vel_gain * vel_error  # Note: when vel_error > 0, reduce braking to accelerate
                     curr_Fz += Fz_pitch_adjustment
                 else:
-                    # 后腿：原来的逻辑
+                    # Hind legs: original logic
                     curr_Fx += Fx_vel_adjustment
                     curr_Fz -= Fz_pitch_adjustment
                 

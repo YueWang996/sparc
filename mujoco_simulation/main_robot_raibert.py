@@ -61,7 +61,6 @@ class MuJoCoSimulation:
                     self.last_control_time = self.data.time
                 mj.mj_step(self.model, self.data)
                 viewer.sync()
-                time.sleep(0.01)
 
 # =========================================================================
 #  Main Function

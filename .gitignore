@@ -14,3 +14,4 @@ env/
 /mujoco_simulation/dog_controller_no_cpg.py
 /mujoco_simulation/main_robot.py
 /mujoco_simulation/run_grid_search.py
+/bard-src/
